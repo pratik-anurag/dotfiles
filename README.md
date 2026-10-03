@@ -5,10 +5,13 @@ Personal macOS development configuration, currently centered on a portable Neovi
 ## Install on a new Mac
 
 ```sh
-git clone https://github.com/<your-user>/dotfiles.git ~/dotfiles
+git clone https://github.com/pratik-anurag/dotfiles.git ~/dotfiles
 brew bundle --file=~/dotfiles/Brewfile
 mkdir -p ~/.config
-ln -s ~/dotfiles/nvim ~/.config/nvim
+if [ -e ~/.config/nvim ] && [ ! -L ~/.config/nvim ]; then
+  mv ~/.config/nvim ~/.config/nvim.backup
+fi
+ln -sfn ~/dotfiles/nvim ~/.config/nvim
 printf '\nsource ~/dotfiles/zsh/nvim.zsh\n' >> ~/.zshrc
 exec zsh
 nvim --headless '+Lazy! sync' +qa
