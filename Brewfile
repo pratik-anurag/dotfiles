@@ -1,0 +1,11 @@
+# Install with: brew bundle --file=~/dotfiles/Brewfile
+brew "neovim"
+brew "git"
+brew "gh"
+brew "ripgrep"
+brew "fd"
+brew "node"
+brew "python"
+brew "go"
+brew "gopls"
+brew "delve"
