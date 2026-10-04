@@ -19,6 +19,10 @@ nvim --headless '+Lazy! sync' +qa
 
 Then open Neovim and run `:Mason` if you want to inspect language-server and formatter installations. Run `:checkhealth` to diagnose a fresh installation.
 
+## Terminal font
+
+This configuration uses Nerd Font icons in the statusline and file explorer. The Brewfile installs **JetBrainsMono Nerd Font Mono**; select it in your terminal application's font settings, then restart the terminal. Without that font, missing icons appear as question marks.
+
 ## Neovim essentials
 
 - `Space` opens the WhichKey shortcut guide.
