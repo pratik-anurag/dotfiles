@@ -32,6 +32,19 @@ This configuration uses Nerd Font icons in the statusline and file explorer. The
 - `Space xx` opens diagnostics; `Space T` shows test commands; `Space d` shows debug commands.
 - `gd` goes to definition; `gr` finds references; `K` shows documentation.
 
+## Enhanced workflow
+
+- `s` jumps to visible text; `S` jumps by syntax node.
+- `Space o` toggles the current file's symbol outline.
+- `Space sr` opens project-wide search and replace; `Space sw` starts it for the word under the cursor.
+- `Space or` runs a project task; `Space ot` opens the task list.
+- `Space pv` selects the Python virtual environment for the current project.
+- JSON and YAML files receive schema-aware completion and validation automatically.
+- JavaScript and TypeScript can use the normal debugger controls: `F5`, `F10`, `F11`, and `F12`.
+- Markdown files render headings, tables, checkboxes, and code blocks more clearly when opened.
+
+For editing, `mini.ai` adds text objects such as `vif` (select inside function) and `daf` (delete around function). `nvim-surround` adds `ysiw]` (surround word with brackets), `cs\"'` (change double quotes to single quotes), and `ds)` (delete surrounding parentheses).
+
 ## Updating
 
 ```vim

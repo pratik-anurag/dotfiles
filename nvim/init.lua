@@ -88,6 +88,32 @@ require("lazy").setup({
       { "<leader>ft", "<cmd>TodoTelescope<CR>", desc = "Find TODOs" },
     },
   },
+  { "folke/flash.nvim", event = "VeryLazy", opts = {}, keys = {
+      { "s", mode = { "n", "x", "o" }, function() require("flash").jump() end, desc = "Flash jump" },
+      { "S", mode = { "n", "x", "o" }, function() require("flash").treesitter() end, desc = "Flash treesitter" },
+    },
+  },
+  { "echasnovski/mini.ai", version = false, opts = { n_lines = 500 } },
+  { "kylechui/nvim-surround", version = "*", event = "VeryLazy", opts = {} },
+  { "stevearc/aerial.nvim", opts = {}, keys = {
+      { "<leader>o", "<cmd>AerialToggle!<CR>", desc = "Toggle symbol outline" },
+    },
+  },
+  { "MagicDuck/grug-far.nvim", opts = {}, keys = {
+      { "<leader>sr", function() require("grug-far").open() end, desc = "Search and replace" },
+      { "<leader>sw", function() require("grug-far").open({ prefills = { search = vim.fn.expand("<cword>") } }) end, desc = "Replace word" },
+    },
+  },
+  { "stevearc/overseer.nvim", opts = {}, keys = {
+      { "<leader>or", "<cmd>OverseerRun<CR>", desc = "Run task" },
+      { "<leader>ot", "<cmd>OverseerToggle<CR>", desc = "Task list" },
+    },
+  },
+  { "MeanderingProgrammer/render-markdown.nvim", ft = { "markdown" }, opts = {}, dependencies = { "nvim-treesitter/nvim-treesitter", "nvim-tree/nvim-web-devicons" } },
+  { "linux-cultist/venv-selector.nvim", dependencies = { "neovim/nvim-lspconfig", "nvim-telescope/telescope.nvim" }, opts = {}, keys = {
+      { "<leader>pv", "<cmd>VenvSelect<CR>", desc = "Select Python environment" },
+    },
+  },
   { "mfussenegger/nvim-dap", keys = {
       { "<F5>", function() require("dap").continue() end, desc = "Debug continue" },
       { "<F10>", function() require("dap").step_over() end, desc = "Debug step over" },
@@ -113,6 +139,19 @@ require("lazy").setup({
       require("dap-python").setup(vim.fn.stdpath("data") .. "/mason/packages/debugpy/venv/bin/python")
     end,
   },
+  { "mxsdev/nvim-dap-vscode-js", dependencies = { "mfussenegger/nvim-dap" }, config = function()
+      require("dap-vscode-js").setup({
+        debugger_path = vim.fn.stdpath("data") .. "/mason/packages/js-debug-adapter",
+        adapters = { "pwa-node", "pwa-chrome", "pwa-msedge", "node-terminal", "pwa-extensionHost" },
+      })
+      local dap = require("dap")
+      for _, language in ipairs({ "javascript", "typescript", "javascriptreact", "typescriptreact" }) do
+        dap.configurations[language] = {
+          { type = "pwa-node", request = "launch", name = "Launch current file", program = "${file}", cwd = "${workspaceFolder}", runtimeExecutable = "node" },
+        }
+      end
+    end,
+  },
   { "nvim-neotest/neotest", dependencies = { "nvim-neotest/nvim-nio", "nvim-lua/plenary.nvim", "antoinemadec/FixCursorHold.nvim", "mfussenegger/nvim-dap", "nvim-neotest/neotest-go", "nvim-neotest/neotest-python", "marilari88/neotest-vitest" }, config = function()
       require("neotest").setup({ adapters = {
         require("neotest-go"),
@@ -136,6 +175,16 @@ require("lazy").setup({
       { "<leader>fb", "<cmd>Telescope buffers<CR>", desc = "Buffers" },
     },
   },
+  { "mfussenegger/nvim-lint", event = { "BufReadPost", "BufNewFile" }, config = function()
+      local lint = require("lint")
+      lint.linters_by_ft = {
+        go = { "golangcilint" }, python = { "ruff" }, javascript = { "eslint_d" },
+        typescript = { "eslint_d" }, javascriptreact = { "eslint_d" }, typescriptreact = { "eslint_d" }, yaml = { "yamllint" },
+      }
+      vim.api.nvim_create_autocmd({ "BufEnter", "BufWritePost" }, { callback = function() lint.try_lint() end })
+      vim.api.nvim_create_autocmd("BufWritePost", { pattern = { ".github/workflows/*.yml", ".github/workflows/*.yaml" }, callback = function() lint.try_lint("actionlint") end })
+    end,
+  },
   { "lewis6991/gitsigns.nvim", opts = {} },
   { "numToStr/Comment.nvim", opts = {} },
   { "windwp/nvim-autopairs", event = "InsertEnter", opts = {} },
@@ -145,11 +194,12 @@ require("lazy").setup({
     },
   },
   { "williamboman/mason.nvim", opts = {} },
+  { "WhoIsSethDaniel/mason-tool-installer.nvim", dependencies = { "williamboman/mason.nvim" }, opts = { ensure_installed = { "eslint_d", "js-debug-adapter", "golangci-lint", "yamllint", "actionlint" } } },
   { "williamboman/mason-lspconfig.nvim", dependencies = { "williamboman/mason.nvim", "neovim/nvim-lspconfig" }, opts = {
       ensure_installed = { "lua_ls", "pyright", "ts_ls", "bashls", "gopls", "jsonls", "yamlls" },
     },
   },
-  { "neovim/nvim-lspconfig", config = function()
+  { "neovim/nvim-lspconfig", dependencies = { "b0o/SchemaStore.nvim" }, config = function()
       vim.lsp.config("*", { capabilities = require("cmp_nvim_lsp").default_capabilities() })
       vim.diagnostic.config({ virtual_text = true, severity_sort = true, float = { border = "rounded" } })
       vim.api.nvim_create_autocmd("LspAttach", { callback = function(ev)
@@ -163,9 +213,12 @@ require("lazy").setup({
         map("]d", vim.diagnostic.goto_next, "Next diagnostic")
       end })
       vim.lsp.config("lua_ls", { settings = { Lua = { diagnostics = { globals = { "vim" } } } } })
+      vim.lsp.config("jsonls", { settings = { json = { schemas = require("schemastore").json.schemas(), validate = { enable = true } } } })
+      vim.lsp.config("yamlls", { settings = { yaml = { schemaStore = { enable = false, url = "" }, schemas = require("schemastore").yaml.schemas() } } })
       for _, server in ipairs({ "lua_ls", "pyright", "ts_ls", "bashls", "gopls", "jsonls", "yamlls" }) do vim.lsp.enable(server) end
     end,
   },
+  { "b0o/SchemaStore.nvim", lazy = false },
   { "hrsh7th/nvim-cmp", event = "InsertEnter", dependencies = { "hrsh7th/cmp-nvim-lsp", "hrsh7th/cmp-buffer", "hrsh7th/cmp-path", "L3MON4D3/LuaSnip", "saadparwaiz1/cmp_luasnip" }, config = function()
       local cmp = require("cmp")
       local kind_labels = {
@@ -205,6 +258,9 @@ require("lazy").setup({
         { "<leader>d", group = "Debug" },
         { "<leader>T", group = "Tests" },
         { "<leader>x", group = "Diagnostics" },
+        { "<leader>s", group = "Search and replace" },
+        { "<leader>o", group = "Outline and tasks" },
+        { "<leader>p", group = "Python" },
         { "<leader>q", group = "Sessions" },
         { "<leader>e", desc = "Toggle file explorer" },
         { "<leader>t", desc = "Toggle terminal" },
