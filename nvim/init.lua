@@ -45,6 +45,42 @@ require("lazy").setup({
   { "nvim-lualine/lualine.nvim", dependencies = { "nvim-tree/nvim-web-devicons" }, opts = { options = { theme = "tokyonight" } } },
   { "nvim-tree/nvim-web-devicons" },
   { "nvim-lua/plenary.nvim" },
+  { "goolord/alpha-nvim", event = "VimEnter", dependencies = { "nvim-tree/nvim-web-devicons" }, config = function()
+      local alpha = require("alpha")
+      local dashboard = require("alpha.themes.dashboard")
+      dashboard.section.header.val = {
+        "",
+        "  66666   7777777 ",
+        " 66          77   ",
+        " 66666      77    ",
+        " 66        77     ",
+        "  66666   77      ",
+        "",
+      }
+      dashboard.section.buttons.val = {
+        dashboard.button("f", "  Find file", "<cmd>Telescope find_files<CR>"),
+        dashboard.button("r", "  Recent files", "<cmd>Telescope oldfiles<CR>"),
+        dashboard.button("n", "  New file", "<cmd>ene<CR>"),
+        dashboard.button("s", "  Restore session", function() require("persistence").load() end),
+        dashboard.button("q", "  Quit", "<cmd>qa<CR>"),
+      }
+      dashboard.section.footer.val = function()
+        local stats = require("lazy").stats()
+        return {
+          "",
+          "\"Maybe that's what Batman is about. Not winning. But failing, and getting back up.",
+          "Knowing he'll fail, fail a thousand times, but still won't give up.\"",
+          "— Batman",
+          "",
+          string.format("Loaded %d plugins in %.2f ms", stats.count, stats.startuptime),
+        }
+      end
+      dashboard.section.footer.opts.hl = "Comment"
+      dashboard.section.header.opts.hl = "Title"
+      dashboard.section.buttons.opts.hl = "Keyword"
+      alpha.setup(dashboard.config)
+    end,
+  },
   { "akinsho/toggleterm.nvim", version = "*", opts = {
       size = 15,
       open_mapping = [[<c-\\>]],

@@ -25,6 +25,7 @@ This configuration uses Nerd Font icons in the statusline and file explorer. The
 
 ## Neovim essentials
 
+- Starting `nvim` without a file opens the `67` dashboard. Use `f`, `r`, `n`, `s`, or `q` for its quick actions.
 - `Space` opens the WhichKey shortcut guide.
 - `Space ff` finds files; `Space fg` searches project text.
 - `Space e` toggles the file explorer; `Space t` toggles the terminal.
