@@ -48,6 +48,18 @@ require("lazy").setup({
   { "goolord/alpha-nvim", event = "VimEnter", dependencies = { "nvim-tree/nvim-web-devicons" }, config = function()
       local alpha = require("alpha")
       local dashboard = require("alpha.themes.dashboard")
+      local function button(shortcut, label, command)
+        local item = dashboard.button(shortcut, string.format("[%s] %s", shortcut, label), command)
+        item.opts.hl = "Keyword"
+        item.opts.hl_shortcut = "Number"
+        return item
+      end
+      local function git_status()
+        local branch = vim.fn.systemlist({ "git", "branch", "--show-current" })[1]
+        if vim.v.shell_error ~= 0 or not branch or branch == "" then return "Git: not a repository" end
+        local changes = vim.fn.system({ "git", "status", "--porcelain" })
+        return changes == "" and ("Git: " .. branch .. " (clean)") or ("Git: " .. branch .. " (changes)")
+      end
       dashboard.section.header.val = {
         "",
         "  66666   7777777 ",
@@ -58,11 +70,12 @@ require("lazy").setup({
         "",
       }
       dashboard.section.buttons.val = {
-        dashboard.button("f", "  Find file", "<cmd>Telescope find_files<CR>"),
-        dashboard.button("r", "  Recent files", "<cmd>Telescope oldfiles<CR>"),
-        dashboard.button("n", "  New file", "<cmd>ene<CR>"),
-        dashboard.button("s", "  Restore session", function() require("persistence").load() end),
-        dashboard.button("q", "  Quit", "<cmd>qa<CR>"),
+        button("f", "Find file", "<cmd>Telescope find_files<CR>"),
+        button("r", "Recent files", "<cmd>Telescope oldfiles<CR>"),
+        button("p", "Recent projects", "<cmd>Telescope repo list<CR>"),
+        button("n", "New file", "<cmd>ene<CR>"),
+        button("s", "Restore session", function() require("persistence").load() end),
+        button("q", "Quit", "<cmd>qa<CR>"),
       }
       dashboard.section.footer.val = function()
         local stats = require("lazy").stats()
@@ -72,6 +85,7 @@ require("lazy").setup({
           "Knowing he'll fail, fail a thousand times, but still won't give up.\"",
           "— Batman",
           "",
+          git_status(),
           string.format("Loaded %d plugins in %.2f ms", stats.count, stats.startuptime),
         }
       end
@@ -211,6 +225,11 @@ require("lazy").setup({
       { "<leader>fb", "<cmd>Telescope buffers<CR>", desc = "Buffers" },
     },
   },
+  { "cljoly/telescope-repo.nvim", dependencies = { "nvim-telescope/telescope.nvim" }, config = function()
+      require("telescope").load_extension("repo")
+    end,
+    keys = { { "<leader>fp", "<cmd>Telescope repo list<CR>", desc = "Find projects" } },
+  },
   { "mfussenegger/nvim-lint", event = { "BufReadPost", "BufNewFile" }, config = function()
       local lint = require("lint")
       lint.linters_by_ft = {
@@ -229,6 +248,7 @@ require("lazy").setup({
       highlight = { enable = true }, indent = { enable = true },
     },
   },
+  { "nvim-treesitter/nvim-treesitter-context", opts = { max_lines = 4, mode = "cursor" } },
   { "williamboman/mason.nvim", opts = {} },
   { "WhoIsSethDaniel/mason-tool-installer.nvim", dependencies = { "williamboman/mason.nvim" }, opts = { ensure_installed = { "eslint_d", "js-debug-adapter", "golangci-lint", "yamllint", "actionlint" } } },
   { "williamboman/mason-lspconfig.nvim", dependencies = { "williamboman/mason.nvim", "neovim/nvim-lspconfig" }, opts = {

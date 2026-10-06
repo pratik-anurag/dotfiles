@@ -28,10 +28,12 @@ This configuration uses Nerd Font icons in the statusline and file explorer. The
 - Starting `nvim` without a file opens the `67` dashboard. Use `f`, `r`, `n`, `s`, or `q` for its quick actions.
 - `Space` opens the WhichKey shortcut guide.
 - `Space ff` finds files; `Space fg` searches project text.
+- `Space fp` opens recently discovered local Git projects.
 - `Space e` toggles the file explorer; `Space t` toggles the terminal.
 - `Space gg` opens the Git interface; `Space gd` opens a side-by-side diff.
 - `Space xx` opens diagnostics; `Space T` shows test commands; `Space d` shows debug commands.
 - `gd` goes to definition; `gr` finds references; `K` shows documentation.
+- Long files retain the enclosing function or class header as you scroll.
 
 ## Enhanced workflow
 
