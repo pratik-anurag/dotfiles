@@ -10,7 +10,6 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: Homebrew/actions/setup-homebrew@master
       - name: Install declared dependencies
         run: brew bundle --file=Brewfile
       - name: Check Brewfile
