@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+# Bootstrap this repository safely and idempotently on macOS.
+set -euo pipefail
+
+repo_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)"
+backup_suffix=".dotfiles-backup-$(date +%Y%m%d%H%M%S)"
+
+if ! command -v brew >/dev/null 2>&1; then
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+fi
+eval "$(brew shellenv)"
+brew bundle --file="$repo_root/Brewfile"
+
+link_path() {
+  local source_path="$1" target_path="$2"
+  mkdir -p "$(dirname "$target_path")"
+  if [[ -L "$target_path" && "$(readlink "$target_path")" == "$source_path" ]]; then
+    return
+  fi
+  if [[ -e "$target_path" || -L "$target_path" ]]; then
+    mv "$target_path" "${target_path}${backup_suffix}"
+    printf 'Backed up %s to %s\n' "$target_path" "${target_path}${backup_suffix}"
+  fi
+  ln -s "$source_path" "$target_path"
+}
+
+link_path "$repo_root/nvim" "$HOME/.config/nvim"
+link_path "$repo_root/git/.gitconfig" "$HOME/.gitconfig"
+link_path "$repo_root/git/ignore" "$HOME/.config/git/ignore"
+link_path "$repo_root/ghostty/config" "$HOME/.config/ghostty/config"
+mkdir -p "$HOME/.config/dotfiles"
+
+zshrc="$HOME/.zshrc"
+start="# >>> dotfiles >>>"
+end="# <<< dotfiles <<<"
+block="$start
+source \"$repo_root/zsh/zshrc.zsh\"
+source \"$repo_root/zsh/nvim.zsh\"
+$end"
+if [[ -f "$zshrc" ]] && grep -Fqx "$start" "$zshrc"; then
+  temporary="$(mktemp)"
+  awk -v begin="$start" -v finish="$end" -v replacement="$block" '
+    $0 == begin { print replacement; skipping = 1; next }
+    $0 == finish && skipping { skipping = 0; next }
+    !skipping { print }
+  ' "$zshrc" >"$temporary"
+  mv "$temporary" "$zshrc"
+else
+  printf '\n%s\n' "$block" >>"$zshrc"
+fi
+
+nvim --headless '+Lazy! sync' +qa
+printf 'Installed dotfiles. Restart Zsh or run: exec zsh\n'

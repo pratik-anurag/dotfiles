@@ -1,0 +1,27 @@
+name: Verify dotfiles
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Homebrew/actions/setup-homebrew@master
+      - name: Install declared dependencies
+        run: brew bundle --file=Brewfile
+      - name: Check Brewfile
+        run: brew bundle check --file=Brewfile
+      - name: Check shell scripts
+        run: |
+          shellcheck bin/* macos/defaults.sh
+          shfmt -d bin/* macos/defaults.sh
+      - name: Validate Neovim configuration
+        run: |
+          mkdir -p "$HOME/.config"
+          ln -s "$GITHUB_WORKSPACE/nvim" "$HOME/.config/nvim"
+          nvim --headless '+lua assert(loadfile(vim.fn.stdpath("config") .. "/init.lua"))' +qa
+          nvim --headless '+Lazy! sync' +qa

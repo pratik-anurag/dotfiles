@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Verify the dependencies expected by this dotfiles configuration.
+set -uo pipefail
+
+repo_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)"
+failed=0
+check_command() { command -v "$1" >/dev/null 2>&1 && printf 'ok   %s\n' "$1" || { printf 'MISS %s\n' "$1"; failed=1; }; }
+check_link() { [[ -L "$2" && "$(readlink "$2")" == "$1" ]] && printf 'ok   %s\n' "$2" || { printf 'MISS %s (run bin/install)\n' "$2"; failed=1; }; }
+
+if command -v brew >/dev/null 2>&1; then
+  brew bundle check --file="$repo_root/Brewfile" || failed=1
+  brew list --cask font-jetbrains-mono-nerd-font >/dev/null 2>&1 || { printf 'MISS font-jetbrains-mono-nerd-font\n'; failed=1; }
+else
+  printf 'MISS Homebrew\n'; failed=1
+fi
+
+check_link "$repo_root/nvim" "$HOME/.config/nvim"
+for tool in git node python3 go gopls delve actionlint golangci-lint yamllint ruff stylua prettier prettierd eslint_d shellcheck shfmt nvim; do check_command "$tool"; done
+
+if command -v nvim >/dev/null 2>&1; then
+  nvim --headless '+Lazy! sync' +qa && printf 'ok   Lazy sync\n' || { printf 'MISS Lazy sync\n'; failed=1; }
+fi
+exit "$failed"
